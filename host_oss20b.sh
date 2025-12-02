@@ -8,7 +8,7 @@ conda activate dspy-env
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export CUDA_VISIBLE_DEVICES="${1:-0}"
 
-MODEL_DIR="/scratch/$USER/models/unsloth-openai-gpt-oss-20b"
+MODEL_DIR="/scratch/$USER/lms/unsloth-openai-gpt-oss-20b"
 PORT=8000
 
 python -m vllm.entrypoints.openai.api_server \
