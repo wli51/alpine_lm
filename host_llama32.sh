@@ -8,7 +8,7 @@ conda activate dspy-env
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export CUDA_VISIBLE_DEVICES="${1:-0}"
 
-MODEL_DIR="/scratch/$USER/lms/unsloth-Llama-3.2-3B-Instruct"
+MODEL_DIR="/scratch/alpine/$USER/lms/unsloth-Llama-3.2-3B-Instruct"
 PORT=8000
 
 python -m vllm.entrypoints.openai.api_server \
