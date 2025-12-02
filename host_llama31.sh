@@ -13,6 +13,7 @@ PORT=8000
 
 python -m vllm.entrypoints.openai.api_server \
   --model "$MODEL_DIR" \
+  --served-model-name "unsloth/Llama-3.1-8B-Instruct" \
   --host 127.0.0.1 \
   --port $PORT \
   --dtype auto \
