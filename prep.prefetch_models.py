@@ -8,10 +8,12 @@ BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS = [
     "unsloth/Llama-3.2-3B-Instruct",
+    "unsloth/Llama-3.1-8B-Instruct",
+    "openai/gpt-oss-20b",
 ]
 
 for repo_id in MODELS:
-    
+
     local_dir = BASE_DIR / repo_id.replace("/", "-")
     
     if local_dir.exists() and any(local_dir.iterdir()):
