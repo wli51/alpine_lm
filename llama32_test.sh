@@ -6,8 +6,8 @@ export OPENAI_API_KEY="dummy"
 curl "$OPENAI_BASE_URL/chat/completions" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model":"unsloth/Llama-3.2-3B-Instruct",
-    "messages":[{"role":"user","content":"Say hello in one sentence."}],
-    "stream": false
-  }' | jq -r '.choices[0].message.content'
+  -d "{
+    \"model\":\"/scratch/alpine/$USER/lms/unsloth-Llama-3.2-3B-Instruct\",
+    \"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],
+    \"stream\": false
+  }" | jq -r '.choices[0].message.content'
