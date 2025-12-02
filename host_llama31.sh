@@ -20,7 +20,7 @@ python -m vllm.entrypoints.openai.api_server \
   --kv-cache-dtype auto \
   --max-model-len 32768 \
   --max-num-seqs 1 \
-  --swap-space 24
+  --swap-space 24 \
   > vllm_server.log 2>&1 &
 
 VLLM_PID=$!
