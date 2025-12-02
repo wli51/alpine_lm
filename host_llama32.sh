@@ -25,4 +25,4 @@ python -m vllm.entrypoints.openai.api_server \
 
 VLLM_PID=$!
 
-echo "Started vLLM server with PID $VLLM_PID on port $PORT"
+echo "Started vLLM server hosting unsloth/Llama-3.2-3B-Instruct with PID $VLLM_PID on port $PORT"
