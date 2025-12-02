@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+eval "$(conda shell.bash hook)"
 conda activate dspy-env
 
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
