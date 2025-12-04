@@ -141,7 +141,7 @@ try:
 except Exception as e:
     if all(keyword in str(e).lower() for keyword in ["experiment", "already", "exists"]):
         exp = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
-        exp_id = exp.experiment_id if exp_id else None
+        exp_id = exp.experiment_id if exp else None
         print(f"MLflow experiment {EXPERIMENT_NAME} already exists with ID: {exp_id}")
     else:
         print(f"Error creating MLflow experiment: {e}")
