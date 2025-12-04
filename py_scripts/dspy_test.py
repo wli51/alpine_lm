@@ -131,11 +131,17 @@ print(sample_data.head())
 # =========
 
 mlflow.set_tracking_uri(TRACKING_URI)
-exp_id = mlflow.set_experiment(EXPERIMENT_NAME)
-if exp_id is not None:
-    print(f"Using MLflow experiment ID: {exp_id}")
-else:
-    raise RuntimeError(f"Failed to set or get MLflow experiment: {EXPERIMENT_NAME}")
+
+try:
+    exp_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    print(f"Created new MLflow experiment {EXPERIMENT_NAME} with ID: {exp_id}")
+except Exception as e:
+    if all(keyword in str(e).lower() for keyword in ["experiment", "already", "exists"]):
+        exp = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+        exp_id = exp.experiment_id if exp_id else None
+        print(f"MLflow experiment {EXPERIMENT_NAME} already exists with ID: {exp_id}")
+    else:
+        print(f"Error creating MLflow experiment: {e}")
 
 # =========
 # Dspy lm call sanity check
