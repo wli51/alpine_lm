@@ -41,6 +41,7 @@ SERVED_MODEL_NAME="unsloth/Llama-3.2-3B-Instruct"
 PORT="${PORT:-8000}"
 
 # Expose config for Python script
+export TOOL_CACHE_ROOT="/scratch/alpine/$USER/.tool_cache"
 export MODEL_ID="$SERVED_MODEL_NAME"
 export OPENAI_BASE_URL="http://127.0.0.1:${PORT}/v1"
 export OPENAI_API_KEY="local"

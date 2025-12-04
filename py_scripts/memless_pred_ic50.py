@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import os
+import pathlib
 import uuid
 
 import pandas as pd
@@ -10,6 +11,10 @@ import mlflow
 
 from orchestrator import orchestrate_memless_pred
 from utils import deterministic_seeds
+from dspy_litl_agentic_system.tools.tool_cache.cache_config import (
+    set_default_cache_root, 
+    set_cache_defaults
+)
 
 
 def get_env(name: str, default=None, required: bool = False):
@@ -33,6 +38,18 @@ N_REPLICATES = int(get_env("N_REPLICATES", "10"))
 MASTER_SEED = int(get_env("MASTER_SEED", "42"))
 TRACKING_URI = get_env("MLFLOW_TRACKING_URI", "/MLFLOW/TRACKING/URI/")
 EXPERIMENT_NAME = get_env("MLFLOW_EXPERIMENT_NAME", "EXPERIMENT_NAME")
+TOOL_CACHE_ROOT = get_env("TOOL_CACHE_ROOT", ".")
+if TOOL_CACHE_ROOT:
+    cache_root = Path(TOOL_CACHE_ROOT).expanduser().resolve()
+    cache_root.mkdir(parents=True, exist_ok=True)
+
+    set_default_cache_root(cache_root)
+    set_cache_defaults(
+        size_limit_bytes=2 * 10**12,    # 2 TB
+        expire=None
+    )
+    
+    print(f"Configured cache root: {cache_root}")
 
 # =========
 # Data validation and reading
