@@ -4,6 +4,7 @@
 from pathlib import Path
 import os
 import pathlib
+import time
 import uuid
 
 import pandas as pd
@@ -124,36 +125,63 @@ print(sample_data.head())
 # Config tracking and run replicates
 # =========
 
-mlflow.set_tracking_uri(TRACKING_URI)
-mlflow.set_experiment(EXPERIMENT_NAME)
+print(f"Setting MLflow tracking URI to: {TRACKING_URI}")
+mlflow.set_tracking_uri(pathlib.Path(TRACKING_URI).resolve().as_uri())
+print(f"MLflow tracking URI set to: {mlflow.get_tracking_uri()}")
+
+try:
+    exp_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    print(f"Created new MLflow experiment {EXPERIMENT_NAME} with ID: {exp_id}")
+except Exception as e:
+    if all(keyword in str(e).lower() for keyword in ["experiment", "already", "exists"]):
+        exp = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+        exp_id = exp.experiment_id if exp else None
+        print(f"MLflow experiment {EXPERIMENT_NAME} already exists with ID: {exp_id}")
+    else:
+        print(f"Error creating MLflow experiment: {e}")
 
 seeds = deterministic_seeds(MASTER_SEED)[:N_REPLICATES]
 
-session_id = str(uuid.uuid4())
+# run as many as possible within time limit
+TIME_LIMIT_SECONDS = int(os.environ.get("RUN_TIME_LIMIT_SECONDS", str(3 * 3600 + 45 * 60)))
+start_time = time.time()
+print(f"Soft run time limit set to {TIME_LIMIT_SECONDS} seconds (~{TIME_LIMIT_SECONDS/3600:.2f} hours)")
 
-for seed in seeds:
-    with mlflow.start_run(run_name=f"{valid_cells[0].stem}_{session_id}") as parent_run:
-        mlflow.set_tags(
-            {
-                "session_id": session_id,
-                "group": "experimenting",
-                "mem": "less",
-                "task": "provisional_prediction",
-                "seed": str(seed),
-                "model_id": MODEL_ID,
-            }
-        )
+for cell_path in valid_cells:
+    
+    elapsed = time.time() - start_time
+    
+    if elapsed > TIME_LIMIT_SECONDS:
+        print(f"Reached time limit of {TIME_LIMIT_SECONDS} seconds. Stopping further runs.")
+        break
+    else:
+        print(f"Elapsed time: {elapsed:.2f} seconds. Continuing run on cell: {cell_path.name}")
 
-        mlflow.dspy.autolog()
-        mlflow.log_params(LM_CONFIG | {"seed": seed})
+    for seed in seeds:
 
-        _ = orchestrate_memless_pred(
-            dataset=sample_data,
-            lm_config={
-                **LM_CONFIG,
-                "seed": seed,  # per-replicate seed
-            },
-            drug_col="name",
-            cell_col="ccle_name",
-            target_col="ic50",
-        )
+        session_id = str(uuid.uuid4())
+        with mlflow.start_run(run_name=f"{cell_path.stem}_{session_id}") as parent_run:
+            mlflow.set_tags(
+                {
+                    "session_id": session_id,
+                    "group": "experimenting",
+                    "mem": "less",
+                    "task": "provisional_prediction",
+                    "seed": str(seed),
+                    "model_id": MODEL_ID,
+                }
+            )
+
+            mlflow.dspy.autolog()
+            mlflow.log_params(LM_CONFIG | {"seed": seed})
+
+            _ = orchestrate_memless_pred(
+                dataset=pd.read_csv(cell_path),
+                lm_config={
+                    **LM_CONFIG,
+                    "seed": seed,  # per-replicate seed
+                },
+                drug_col="name",
+                cell_col="ccle_name",
+                target_col="ic50",
+            )
