@@ -36,7 +36,7 @@ export OPENAI_API_KEY="local"
 export LM_MAX_TOKENS="${LM_MAX_TOKENS:-1024}"
 export LM_SEED="${LM_SEED:-42}"
 
-export PRISM_DATA_PATH="/PATH/TO/PROCESSED/PRISM/DATA/"
+export PRISM_DATA_PATH="/projects/$USER/data/PRISM_processed/overlap_set/"
 if [ ! -d "$PRISM_DATA_PATH" ]; then
     echo "ERROR: PRISM data path does not exist: $PRISM_DATA_PATH"
     exit 1
@@ -74,7 +74,7 @@ echo "Started vLLM server (PID $VLLM_PID) on port $PORT"
 # --- WAIT FOR SERVER READINESS ---
 
 echo "Waiting for vLLM server to be ready..."
-for i in {1..30}; do
+for i in {1..180}; do
   if curl -s "${OPENAI_BASE_URL}/models" >/dev/null 2>&1; then
     echo "vLLM is up!"
     break
