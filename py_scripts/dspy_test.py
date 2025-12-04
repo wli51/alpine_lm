@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import os
+import pathlib
 import uuid
 
 import dspy
@@ -130,7 +131,9 @@ print(sample_data.head())
 # Config tracking and run replicates
 # =========
 
-mlflow.set_tracking_uri(TRACKING_URI)
+print(f"Setting MLflow tracking URI to: {TRACKING_URI}")
+mlflow.set_tracking_uri(pathlib.Path(TRACKING_URI).resolve().as_uri())
+print(f"MLflow tracking URI set to: {mlflow.get_tracking_uri()}")
 
 try:
     exp_id = mlflow.create_experiment(EXPERIMENT_NAME)
