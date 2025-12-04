@@ -140,7 +140,7 @@ except Exception as e:
     else:
         print(f"Error creating MLflow experiment: {e}")
 
-seeds = deterministic_seeds(MASTER_SEED)[:N_REPLICATES]
+seeds = deterministic_seeds(MASTER_SEED, n=N_REPLICATES)[:N_REPLICATES]
 
 # run as many as possible within time limit
 TIME_LIMIT_SECONDS = int(os.environ.get("RUN_TIME_LIMIT_SECONDS", str(3 * 3600 + 45 * 60)))
