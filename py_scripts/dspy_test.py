@@ -127,6 +127,17 @@ print("Sample data head:")
 print(sample_data.head())
 
 # =========
+# Config tracking and run replicates
+# =========
+
+mlflow.set_tracking_uri(TRACKING_URI)
+exp_id = mlflow.set_experiment(EXPERIMENT_NAME)
+if exp_id is not None:
+    print(f"Using MLflow experiment ID: {exp_id}")
+else:
+    raise RuntimeError(f"Failed to set or get MLflow experiment: {EXPERIMENT_NAME}")
+
+# =========
 # Dspy lm call sanity check
 # =========
 
