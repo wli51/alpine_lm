@@ -1,22 +1,24 @@
 #!/bin/bash
-#SBATCH--job-name=dspy_llama323b_pred_ic50_smoke_test
-#SBATCH--partition=aa100
-#SBATCH--qos=normal
-#SBATCH--time=04:00:00
-#SBATCH--nodes=1
-#SBATCH--ntasks=10
-#SBATCH--gres=gpu:1
-#SBATCH--output=dspy_llama323b_pred_ic50_smoke_test.out
-#SBATCH--error=dspy_llama323b_pred_ic50_smoke_test.err
-#SBATCH--mail-type=ALL
-#SBATCH--mail-user=weishan.2.li@cuanschutz.edu
+#SBATCH --job-name=dspy_llama323b_pred_ic50_smoke_test
+#SBATCH --partition=aa100
+#SBATCH --qos=normal
+#SBATCH --time=04:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=10
+#SBATCH --gres=gpu:1
+#SBATCH --output=dspy_llama323b_pred_ic50_smoke_test.out
+#SBATCH --error=dspy_llama323b_pred_ic50_smoke_test.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=weishan.2.li@cuanschutz.edu
 
 set -euo pipefail
 
 # --- Resolve repo root & python script path ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
+REPO_ROOT="${SLURM_SUBMIT_DIR:-/projects/$USER/repo_name}"
 PY_SCRIPT="$REPO_ROOT/py_scripts/memless_pred_ic50.py"
+LOG_DIR="$REPO_ROOT/logs"
+mkdir -p "$LOG_DIR"
 
 # Sanity print
 echo "SCRIPT_DIR = $SCRIPT_DIR"
@@ -78,7 +80,7 @@ python -m vllm.entrypoints.openai.api_server \
   --max-model-len 32768 \
   --max-num-seqs 1 \
   --swap-space 24 \
-  > "$REPO_ROOT/vllm_server.log" 2>&1 &
+  > "$LOG_DIR/vllm_server_${SLURM_JOB_ID}.log" 2>&1 &
 
 VLLM_PID=$!
 echo "Started vLLM server (PID $VLLM_PID) on port $PORT"
