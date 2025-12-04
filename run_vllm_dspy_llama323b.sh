@@ -3,7 +3,7 @@
 #SBATCH--partition=aa100
 #SBATCH--qos=normal
 #SBATCH--time=04:00:00
-#SBATCH--nods=1
+#SBATCH--nodes=1
 #SBATCH--ntasks=10
 #SBATCH--gres=gpu:1
 #SBATCH--output=dspy_llama323b_pred_ic50_smoke_test.out
