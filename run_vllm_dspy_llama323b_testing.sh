@@ -43,8 +43,8 @@ if [ ! -d "$PRISM_DATA_PATH" ]; then
     exit 1
 fi
 
-export MLFLOW_TRACKING_URI="http://your-mlflow:5000"
-export MLFLOW_EXPERIMENT_NAME="my_memless_experiment"
+export MLFLOW_TRACKING_URI="/scratch/alpine/$USER/mlruns/"
+export MLFLOW_EXPERIMENT_NAME="test_dspy_scratch"
 export N_REPLICATES=10
 export MASTER_SEED=42
 
