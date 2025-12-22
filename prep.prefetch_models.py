@@ -2,14 +2,16 @@ from huggingface_hub import snapshot_download
 from pathlib import Path
 
 
-
 BASE_DIR = Path("/scratch/alpine/wli19@xsede.org/lms/") 
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS = [
     "unsloth/Llama-3.2-3B-Instruct",
+    "unsloth/Llama-3.2-11B-Vision-Instruct",
     "unsloth/Llama-3.1-8B-Instruct",
     "openai/gpt-oss-20b",
+    "unsloth/Qwen3-8B-Base",
+    "unsloth/Qwen3-VL-8B-Thinking",
 ]
 
 for repo_id in MODELS:
