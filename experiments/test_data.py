@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-DATA_PATH = Path("/projects/$USER/PRISM_data/")
-DATA_PATH = DATA_PATH.expanduser().resolve()
+DATA_PATH = Path("/projects/wli19@xsede.org/PRISM_dataset/")
 
 if not DATA_PATH.exists() or not DATA_PATH.is_dir():
     raise FileNotFoundError(
@@ -14,6 +13,7 @@ tissues = list(DATA_PATH.iterdir())
 
 valid_tissues = []
 valid_cells = []
+drug_set = set()
 for tissue in tissues:
     if not tissue.is_dir():
         print(f"Skipping non-directory item: {tissue}")
@@ -39,6 +39,8 @@ for tissue in tissues:
             raise ValueError(
                 f"Required columns 'name' not found in file: {file}"
             )
+        drug_names = _.name.unique().tolist()
+        drug_set.update(drug_names)
         if "ic50" in _.columns:
             if not pd.api.types.is_numeric_dtype(_["ic50"]):
                 raise ValueError(
@@ -52,3 +54,8 @@ if not valid_cells:
 
 print(f"Total valid tissues found: {len(valid_tissues)}")
 print(f"Total valid cells found: {len(valid_cells)}")
+print(f"Total unique drugs found: {len(drug_set)}")
+
+drug_df = pd.DataFrame({"drug_name": list(drug_set)})
+drug_df.to_csv("drug_set.csv", index=False)
+print(f"Exported {len(drug_set)} unique drugs to drug_set.csv")
