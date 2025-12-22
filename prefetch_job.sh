@@ -5,6 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
+#SBATCH --constraint=cpu
 #SBATCH --output=prefetch.out
 #SBATCH --error=prefetch.err
 #SBATCH --mail-type=ALL
