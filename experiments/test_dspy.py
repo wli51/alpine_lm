@@ -98,6 +98,8 @@ except Exception as e:
     else:
         print(f"Error creating MLflow experiment: {e}")
 
+mlflow.set_experiment(EXPERIMENT_NAME)
+
 seed = 42
 cell_path = valid_cells[0]
 session_id = str(uuid.uuid4())
