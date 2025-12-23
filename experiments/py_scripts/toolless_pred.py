@@ -144,21 +144,7 @@ mlflow.set_experiment(EXPERIMENT_NAME)
 
 seeds = deterministic_seeds(MASTER_SEED, n=N_REPLICATES)[:N_REPLICATES]
 
-# run as many as possible within time limit
-TIME_LIMIT_SECONDS = int(os.environ.get("RUN_TIME_LIMIT_SECONDS", str(3 * 3600 + 45 * 60)))
-start_time = time.time()
-print(f"Soft run time limit set to {TIME_LIMIT_SECONDS} seconds (~{TIME_LIMIT_SECONDS/3600:.2f} hours)")
-
 for cell_path in valid_cells:
-    
-    elapsed = time.time() - start_time
-    
-    if elapsed > TIME_LIMIT_SECONDS:
-        print(f"Reached time limit of {TIME_LIMIT_SECONDS} seconds. Stopping further runs.")
-        break
-    else:
-        print(f"Elapsed time: {elapsed:.2f} seconds. Continuing run on cell: {cell_path.name}")
-
     for seed in seeds:
 
         completion_mark_file = cell_path.parent / f"{cell_path.stem}_toolless_{MODEL_ID}_{str(seed)}.complete"
