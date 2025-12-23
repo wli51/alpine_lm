@@ -1,0 +1,116 @@
+#!/bin/bash
+#SBATCH --job-name=dspy_toolless_pred_oss20b
+#SBATCH --partition=aa100
+#SBATCH --qos=normal
+#SBATCH --time=08:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=10
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=gpu80
+#SBATCH --output=dspy_toolless_pred_oss20b.out
+#SBATCH --error=dspy_toolless_pred_oss20b.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=weishan.2.li@cuanschutz.edu
+
+set -euo pipefail
+
+# --- Resolve repo root & python script path ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${SLURM_SUBMIT_DIR:-/projects/$USER/repo_name}"
+PY_SCRIPT="$REPO_ROOT/py_scripts/toolless_pred.py"
+LOG_DIR="$REPO_ROOT/logs"
+mkdir -p "$LOG_DIR"
+
+# Sanity print
+echo "SCRIPT_DIR = $SCRIPT_DIR"
+echo "PY_SCRIPT  = $PY_SCRIPT"
+
+# --- ENV / MODEL CONFIG (only place you change per model) ---
+
+eval "$(conda shell.bash hook)"
+conda activate dspy-env
+
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
+
+# specify pathing to model on disk 
+MODEL_DIR="/scratch/alpine/$USER/lms/openai-gpt-oss-20b"
+if [ ! -d "$MODEL_DIR" ]; then
+    echo "ERROR: Model directory does not exist: $MODEL_DIR"
+    exit 1
+fi
+SERVED_MODEL_NAME="openai/gpt-oss-20b"
+
+PORT="${PORT:-8000}"
+
+# Expose config for Python script
+export TOOL_CACHE_ROOT="/scratch/alpine/$USER/.tool_cache"
+export MODEL_ID="$SERVED_MODEL_NAME"
+export OPENAI_BASE_URL="http://127.0.0.1:${PORT}/v1"
+export OPENAI_API_KEY="local"
+export LM_MAX_TOKENS="${LM_MAX_TOKENS:-1024}"
+export LM_SEED="${LM_SEED:-42}"
+
+export PRISM_DATA_PATH="/projects/$USER/PRISM_dataset/"
+if [ ! -d "$PRISM_DATA_PATH" ]; then
+    echo "ERROR: PRISM data path does not exist: $PRISM_DATA_PATH"
+    exit 1
+fi
+
+export MLFLOW_TRACKING_URI="/scratch/alpine/$USER/mlruns/"
+export MLFLOW_EXPERIMENT_NAME="dspy_litl"
+export N_REPLICATES=10
+export MASTER_SEED=42
+
+echo "Starting vLLM with:"
+echo "  MODEL_DIR         = $MODEL_DIR"
+echo "  SERVED_MODEL_NAME = $SERVED_MODEL_NAME"
+echo "  MODEL_ID (for DSPy) = $MODEL_ID"
+echo "  OPENAI_BASE_URL   = $OPENAI_BASE_URL"
+
+# --- START vLLM IN BACKGROUND ---
+
+python -m vllm.entrypoints.openai.api_server \
+  --model "$MODEL_DIR" \
+  --served-model-name "$SERVED_MODEL_NAME" \
+  --host 127.0.0.1 \
+  --port "$PORT" \
+  --dtype auto \
+  --gpu-memory-utilization 0.90 \
+  --kv-cache-dtype auto \
+  --max-model-len 32768 \
+  --max-num-seqs 1 \
+  --swap-space 24 \
+  > "$LOG_DIR/vllm_server_${SLURM_JOB_ID}.log" 2>&1 &
+
+VLLM_PID=$!
+echo "Started vLLM server (PID $VLLM_PID) on port $PORT"
+
+# --- WAIT FOR SERVER READINESS ---
+
+echo "Waiting for vLLM server to be ready..."
+for i in {1..90}; do
+  if curl -s "${OPENAI_BASE_URL}/models" >/dev/null 2>&1; then
+    echo "vLLM is up!"
+    break
+  fi
+  sleep 5
+done
+
+if ! curl -s "${OPENAI_BASE_URL}/models" >/dev/null 2>&1; then
+  echo "ERROR: vLLM server never became ready. Exiting."
+  kill "$VLLM_PID" || true
+  exit 1
+fi
+
+# --- RUN YOUR DSPy SCRIPT (NO HARD-CODED CONFIG INSIDE) ---
+
+python "$PY_SCRIPT"
+
+# --- CLEANUP ---
+
+echo "Shutting down vLLM (PID $VLLM_PID)"
+kill "$VLLM_PID" || true
+wait "$VLLM_PID" 2>/dev/null || true
+
+echo "Done."

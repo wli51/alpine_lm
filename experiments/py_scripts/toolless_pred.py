@@ -159,6 +159,11 @@ for cell_path in valid_cells:
 
     for seed in seeds:
 
+        completion_mark_file = cell_path.parent / f"{cell_path.stem}_{str(seed)}.complete"
+        if completion_mark_file.exists():
+            print(f"Skipping already completed run for cell {cell_path.stem} with seed {seed}")
+            continue
+
         session_id = str(uuid.uuid4())
         with mlflow.start_run(run_name=f"{cell_path.stem}_{session_id}") as parent_run:
             
@@ -193,3 +198,7 @@ for cell_path in valid_cells:
                 session_id=session_id,
                 nested_runs=True,
             )
+
+        # Mark completion
+        completion_mark_file.touch()
+        print(f"Marked completion of run for cell {cell_path.stem} with seed {seed}")
