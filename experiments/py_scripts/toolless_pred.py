@@ -161,7 +161,7 @@ for cell_path in valid_cells:
 
     for seed in seeds:
 
-        completion_mark_file = cell_path.parent / f"{cell_path.stem}_{MODEL_ID}_{str(seed)}.complete"
+        completion_mark_file = cell_path.parent / f"{cell_path.stem}_toolless_{MODEL_ID}_{str(seed)}.complete"
         if completion_mark_file.exists():
             print(f"Skipping already completed run for cell {cell_path.stem} with seed {seed}")
             continue
